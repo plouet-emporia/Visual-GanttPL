@@ -356,15 +356,12 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
         wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row1, LABEL_COLS + totalWeeks)).Interior.Color = rowColor
         wsTimeline.Range(wsTimeline.Cells(row2, 1), wsTimeline.Cells(row2, LABEL_COLS + totalWeeks)).Interior.Color = rowColor
 
-        ' Merge Project cells vertically (row1:row2)
-        wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row2, 1)).Merge
+        ' Row 1: Project, Task, %, Owner
         wsTimeline.Cells(row1, 1).Value = project
         wsTimeline.Cells(row1, 1).Font.Size = 12
         wsTimeline.Cells(row1, 1).VerticalAlignment = xlCenter
         wsTimeline.Cells(row1, 1).WrapText = True
 
-        ' Merge Task cells vertically (row1:row2)
-        wsTimeline.Range(wsTimeline.Cells(row1, 2), wsTimeline.Cells(row2, 2)).Merge
         wsTimeline.Cells(row1, 2).Value = taskName
         wsTimeline.Cells(row1, 2).Font.Bold = True
         wsTimeline.Cells(row1, 2).Font.Size = 12
@@ -388,27 +385,32 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
         wsTimeline.Cells(row1, 4).WrapText = True
         wsTimeline.Cells(row1, 4).VerticalAlignment = xlCenter
 
-        ' Comments row (row2) - merge from column 3 to end of timeline
-        wsTimeline.Range(wsTimeline.Cells(row2, 3), wsTimeline.Cells(row2, LABEL_COLS + totalWeeks)).Merge
-        wsTimeline.Cells(row2, 3).Value = comments
-        wsTimeline.Cells(row2, 3).Font.Size = 11
-        wsTimeline.Cells(row2, 3).Font.Italic = True
-        wsTimeline.Cells(row2, 3).Font.Color = RGB(80, 80, 80)
-        wsTimeline.Cells(row2, 3).VerticalAlignment = xlCenter
-        wsTimeline.Cells(row2, 3).IndentLevel = 1
+        ' Subtle separator line between row1 and row2
+        wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row1, LABEL_COLS + totalWeeks)).Borders(xlEdgeBottom).LineStyle = xlContinuous
+        wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row1, LABEL_COLS + totalWeeks)).Borders(xlEdgeBottom).Color = RGB(220, 220, 220)
+        wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row1, LABEL_COLS + totalWeeks)).Borders(xlEdgeBottom).Weight = xlHairline
 
-        ' Row bottom border (on row2 only - bottom of task block)
+        ' Comments row (row2) - spans entire row
+        wsTimeline.Range(wsTimeline.Cells(row2, 1), wsTimeline.Cells(row2, LABEL_COLS + totalWeeks)).Merge
+        wsTimeline.Cells(row2, 1).Value = comments
+        wsTimeline.Cells(row2, 1).Font.Size = 10
+        wsTimeline.Cells(row2, 1).Font.Italic = True
+        wsTimeline.Cells(row2, 1).Font.Color = RGB(100, 100, 100)
+        wsTimeline.Cells(row2, 1).VerticalAlignment = xlCenter
+        wsTimeline.Cells(row2, 1).IndentLevel = 1
+
+        ' Row bottom border (on row2 - bottom of task block)
         wsTimeline.Range(wsTimeline.Cells(row2, 1), wsTimeline.Cells(row2, LABEL_COLS + totalWeeks)).Borders(xlEdgeBottom).LineStyle = xlContinuous
-        wsTimeline.Range(wsTimeline.Cells(row2, 1), wsTimeline.Cells(row2, LABEL_COLS + totalWeeks)).Borders(xlEdgeBottom).Color = RGB(200, 200, 200)
+        wsTimeline.Range(wsTimeline.Cells(row2, 1), wsTimeline.Cells(row2, LABEL_COLS + totalWeeks)).Borders(xlEdgeBottom).Color = RGB(180, 180, 180)
 
-        ' Column borders for merged cells
-        wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row2, 1)).Borders(xlEdgeRight).LineStyle = xlContinuous
-        wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row2, 1)).Borders(xlEdgeRight).Color = RGB(200, 200, 200)
-        wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row2, 1)).Borders(xlEdgeRight).Weight = xlThin
+        ' Column borders for row1 only
+        wsTimeline.Cells(row1, 1).Borders(xlEdgeRight).LineStyle = xlContinuous
+        wsTimeline.Cells(row1, 1).Borders(xlEdgeRight).Color = RGB(200, 200, 200)
+        wsTimeline.Cells(row1, 1).Borders(xlEdgeRight).Weight = xlThin
 
-        wsTimeline.Range(wsTimeline.Cells(row1, 2), wsTimeline.Cells(row2, 2)).Borders(xlEdgeRight).LineStyle = xlContinuous
-        wsTimeline.Range(wsTimeline.Cells(row1, 2), wsTimeline.Cells(row2, 2)).Borders(xlEdgeRight).Color = RGB(200, 200, 200)
-        wsTimeline.Range(wsTimeline.Cells(row1, 2), wsTimeline.Cells(row2, 2)).Borders(xlEdgeRight).Weight = xlThin
+        wsTimeline.Cells(row1, 2).Borders(xlEdgeRight).LineStyle = xlContinuous
+        wsTimeline.Cells(row1, 2).Borders(xlEdgeRight).Color = RGB(200, 200, 200)
+        wsTimeline.Cells(row1, 2).Borders(xlEdgeRight).Weight = xlThin
 
         ' Project color indicator bar on left edge (spans both rows)
         Dim colorBar As Shape
