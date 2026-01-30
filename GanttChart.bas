@@ -243,7 +243,7 @@ Private Sub BuildHeaders(ws As Worksheet, startDate As Date, endDate As Date, to
         ' DD/MM of Friday - consistent format
         ws.Cells(3, LABEL_COLS + 1 + i).Value = Format(fridayDate, "d-mmm")
         ws.Cells(3, LABEL_COLS + 1 + i).HorizontalAlignment = xlCenter
-        ws.Cells(3, LABEL_COLS + 1 + i).Font.Size = 9
+        ws.Cells(3, LABEL_COLS + 1 + i).Font.Size = 11
         ws.Cells(3, LABEL_COLS + 1 + i).Interior.Color = RGB(232, 240, 254)
 
         ' Month tracking
@@ -377,11 +377,6 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
         wsTimeline.Cells(row1, 4).Font.Size = 12
         wsTimeline.Cells(row1, 4).WrapText = True
         wsTimeline.Cells(row1, 4).VerticalAlignment = xlCenter
-
-        ' Subtle separator line between row1 and row2
-        wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row1, LABEL_COLS + totalWeeks)).Borders(xlEdgeBottom).LineStyle = xlContinuous
-        wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row1, LABEL_COLS + totalWeeks)).Borders(xlEdgeBottom).Color = RGB(220, 220, 220)
-        wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row1, LABEL_COLS + totalWeeks)).Borders(xlEdgeBottom).Weight = xlHairline
 
         ' Comments row (row2) - spans entire row, white background, dark readable text
         wsTimeline.Range(wsTimeline.Cells(row2, 1), wsTimeline.Cells(row2, LABEL_COLS + totalWeeks)).Merge
