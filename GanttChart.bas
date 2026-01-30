@@ -13,11 +13,12 @@ Private Const HEADER_ROWS As Integer = 3
 Private Const LABEL_COLS As Integer = 4
 Private Const WEEK_COL_WIDTH As Double = 11
 Private Const TASK_ROW_HEIGHT As Double = 36
+Private Const COMMENT_ROW_HEIGHT As Double = 20
 Private Const BAR_HEIGHT As Double = 22
 Private Const BAR_TOP_MARGIN As Double = 7
 
 ' Column indices in Project Data (1-based)
-' A=TaskID/Project, B=TaskName, C=Start, D=End, E=Owner, F=%, ..., L=OrigStart, M=OrigEnd
+' A=TaskID/Project, B=TaskName, C=Start, D=End, E=Owner, F=%, ..., L=OrigStart, M=OrigEnd, N=Comments
 Private Const COL_PROJECT As Integer = 1      ' A - Task ID is the Project
 Private Const COL_TASK_NAME As Integer = 2    ' B - Task Name
 Private Const COL_START_DATE As Integer = 3   ' C - Start Date
@@ -25,6 +26,7 @@ Private Const COL_END_DATE As Integer = 4     ' D - End Date
 Private Const COL_OWNER As Integer = 5        ' E - Owner
 Private Const COL_PERCENT As Integer = 6      ' F - % Complete
 Private Const COL_ORIG_END As Integer = 13    ' M - Original End
+Private Const COL_COMMENTS As Integer = 14    ' N - Comments
 
 ' Colors for alternating rows
 Private Const ROW_COLOR_1 As Long = 16777215  ' White
@@ -302,8 +304,8 @@ End Sub
 Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
                                 startDate As Date, endDate As Date, _
                                 totalWeeks As Integer, lastRow As Long) As Integer
-    Dim i As Long, row As Integer
-    Dim taskName As String, owner As String, project As String
+    Dim i As Long, row1 As Integer, row2 As Integer
+    Dim taskName As String, owner As String, project As String, comments As String
     Dim taskStart As Variant, taskEnd As Variant, origEnd As Variant
     Dim percentComplete As Double
     Dim barsCreated As Integer
@@ -316,6 +318,7 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
     Dim origEndWeek As Double, mainBarWidth As Double
     Dim slipLeft As Double, slipWidth As Double, progressWidth As Double
     Dim hasSlip As Boolean
+    Dim rowColor As Long
 
     barsCreated = 0
     baseLeft = wsTimeline.Cells(HEADER_ROWS + 1, LABEL_COLS + 1).Left
@@ -323,12 +326,17 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
     If colWidth < 10 Then colWidth = 50
 
     For i = 2 To lastRow
-        row = HEADER_ROWS + (i - 1)
-        wsTimeline.Rows(row).RowHeight = TASK_ROW_HEIGHT
+        ' Each task uses 2 rows: row1 for main data, row2 for comments
+        row1 = HEADER_ROWS + ((i - 2) * 2) + 1
+        row2 = row1 + 1
+
+        wsTimeline.Rows(row1).RowHeight = TASK_ROW_HEIGHT
+        wsTimeline.Rows(row2).RowHeight = COMMENT_ROW_HEIGHT
 
         taskName = "" & wsData.Cells(i, COL_TASK_NAME).Value
         project = "" & wsData.Cells(i, COL_PROJECT).Value
         owner = "" & wsData.Cells(i, COL_OWNER).Value
+        comments = "" & wsData.Cells(i, COL_COMMENTS).Value
         taskStart = wsData.Cells(i, COL_START_DATE).Value
         taskEnd = wsData.Cells(i, COL_END_DATE).Value
         origEnd = wsData.Cells(i, COL_ORIG_END).Value
@@ -337,70 +345,79 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
         percentComplete = Val(wsData.Cells(i, COL_PERCENT).Value)
         On Error GoTo 0
 
-        ' Labels - 12pt font
-        wsTimeline.Cells(row, 1).Value = project
-        wsTimeline.Cells(row, 1).Font.Size = 12
-        wsTimeline.Cells(row, 1).VerticalAlignment = xlCenter
-        wsTimeline.Cells(row, 1).WrapText = True
-
-        wsTimeline.Cells(row, 2).Value = taskName
-        wsTimeline.Cells(row, 2).Font.Bold = True
-        wsTimeline.Cells(row, 2).Font.Size = 12
-        wsTimeline.Cells(row, 2).VerticalAlignment = xlCenter
-        wsTimeline.Cells(row, 2).WrapText = True
-
-        ' Percentage column
-        wsTimeline.Cells(row, 3).NumberFormat = "@"  ' Text format
-        If percentComplete > 0 Then
-            wsTimeline.Cells(row, 3).Value = CInt(percentComplete) & "%"
-        End If
-        wsTimeline.Cells(row, 3).Font.Size = 12
-        wsTimeline.Cells(row, 3).Font.Bold = True
-        wsTimeline.Cells(row, 3).HorizontalAlignment = xlCenter
-        wsTimeline.Cells(row, 3).VerticalAlignment = xlCenter
-
-        wsTimeline.Cells(row, 4).Value = owner
-        wsTimeline.Cells(row, 4).Font.Color = RGB(80, 80, 80)
-        wsTimeline.Cells(row, 4).Font.Size = 12
-        wsTimeline.Cells(row, 4).WrapText = True
-        wsTimeline.Cells(row, 4).VerticalAlignment = xlCenter
-
-        ' Alternate row colors
+        ' Determine row color (alternating)
         If (i Mod 2) = 0 Then
-            wsTimeline.Range(wsTimeline.Cells(row, 1), wsTimeline.Cells(row, LABEL_COLS + totalWeeks)).Interior.Color = ROW_COLOR_2
+            rowColor = ROW_COLOR_2
         Else
-            wsTimeline.Range(wsTimeline.Cells(row, 1), wsTimeline.Cells(row, LABEL_COLS + totalWeeks)).Interior.Color = ROW_COLOR_1
+            rowColor = ROW_COLOR_1
         End If
 
-        ' Row bottom border
-        wsTimeline.Range(wsTimeline.Cells(row, 1), wsTimeline.Cells(row, LABEL_COLS + totalWeeks)).Borders(xlEdgeBottom).LineStyle = xlContinuous
-        wsTimeline.Range(wsTimeline.Cells(row, 1), wsTimeline.Cells(row, LABEL_COLS + totalWeeks)).Borders(xlEdgeBottom).Color = RGB(230, 230, 230)
+        ' Apply alternating colors to both rows
+        wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row1, LABEL_COLS + totalWeeks)).Interior.Color = rowColor
+        wsTimeline.Range(wsTimeline.Cells(row2, 1), wsTimeline.Cells(row2, LABEL_COLS + totalWeeks)).Interior.Color = rowColor
 
-        ' Clean column borders for project info columns
-        wsTimeline.Cells(row, 1).Borders(xlEdgeRight).LineStyle = xlContinuous
-        wsTimeline.Cells(row, 1).Borders(xlEdgeRight).Color = RGB(200, 200, 200)
-        wsTimeline.Cells(row, 1).Borders(xlEdgeRight).Weight = xlThin
+        ' Merge Project cells vertically (row1:row2)
+        wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row2, 1)).Merge
+        wsTimeline.Cells(row1, 1).Value = project
+        wsTimeline.Cells(row1, 1).Font.Size = 12
+        wsTimeline.Cells(row1, 1).VerticalAlignment = xlCenter
+        wsTimeline.Cells(row1, 1).WrapText = True
 
-        wsTimeline.Cells(row, 2).Borders(xlEdgeRight).LineStyle = xlContinuous
-        wsTimeline.Cells(row, 2).Borders(xlEdgeRight).Color = RGB(200, 200, 200)
-        wsTimeline.Cells(row, 2).Borders(xlEdgeRight).Weight = xlThin
+        ' Merge Task cells vertically (row1:row2)
+        wsTimeline.Range(wsTimeline.Cells(row1, 2), wsTimeline.Cells(row2, 2)).Merge
+        wsTimeline.Cells(row1, 2).Value = taskName
+        wsTimeline.Cells(row1, 2).Font.Bold = True
+        wsTimeline.Cells(row1, 2).Font.Size = 12
+        wsTimeline.Cells(row1, 2).VerticalAlignment = xlCenter
+        wsTimeline.Cells(row1, 2).WrapText = True
 
-        wsTimeline.Cells(row, 3).Borders(xlEdgeRight).LineStyle = xlContinuous
-        wsTimeline.Cells(row, 3).Borders(xlEdgeRight).Color = RGB(200, 200, 200)
-        wsTimeline.Cells(row, 3).Borders(xlEdgeRight).Weight = xlThin
+        ' Percentage column (row1 only)
+        wsTimeline.Cells(row1, 3).NumberFormat = "@"
+        If percentComplete > 0 Then
+            wsTimeline.Cells(row1, 3).Value = CInt(percentComplete) & "%"
+        End If
+        wsTimeline.Cells(row1, 3).Font.Size = 12
+        wsTimeline.Cells(row1, 3).Font.Bold = True
+        wsTimeline.Cells(row1, 3).HorizontalAlignment = xlCenter
+        wsTimeline.Cells(row1, 3).VerticalAlignment = xlCenter
 
-        wsTimeline.Cells(row, 4).Borders(xlEdgeRight).LineStyle = xlContinuous
-        wsTimeline.Cells(row, 4).Borders(xlEdgeRight).Color = RGB(200, 200, 200)
-        wsTimeline.Cells(row, 4).Borders(xlEdgeRight).Weight = xlThin
+        ' Owner column (row1 only)
+        wsTimeline.Cells(row1, 4).Value = owner
+        wsTimeline.Cells(row1, 4).Font.Color = RGB(80, 80, 80)
+        wsTimeline.Cells(row1, 4).Font.Size = 12
+        wsTimeline.Cells(row1, 4).WrapText = True
+        wsTimeline.Cells(row1, 4).VerticalAlignment = xlCenter
 
-        ' Project color indicator bar on left edge
+        ' Comments row (row2) - merge from column 3 to end of timeline
+        wsTimeline.Range(wsTimeline.Cells(row2, 3), wsTimeline.Cells(row2, LABEL_COLS + totalWeeks)).Merge
+        wsTimeline.Cells(row2, 3).Value = comments
+        wsTimeline.Cells(row2, 3).Font.Size = 11
+        wsTimeline.Cells(row2, 3).Font.Italic = True
+        wsTimeline.Cells(row2, 3).Font.Color = RGB(80, 80, 80)
+        wsTimeline.Cells(row2, 3).VerticalAlignment = xlCenter
+        wsTimeline.Cells(row2, 3).IndentLevel = 1
+
+        ' Row bottom border (on row2 only - bottom of task block)
+        wsTimeline.Range(wsTimeline.Cells(row2, 1), wsTimeline.Cells(row2, LABEL_COLS + totalWeeks)).Borders(xlEdgeBottom).LineStyle = xlContinuous
+        wsTimeline.Range(wsTimeline.Cells(row2, 1), wsTimeline.Cells(row2, LABEL_COLS + totalWeeks)).Borders(xlEdgeBottom).Color = RGB(200, 200, 200)
+
+        ' Column borders for merged cells
+        wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row2, 1)).Borders(xlEdgeRight).LineStyle = xlContinuous
+        wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row2, 1)).Borders(xlEdgeRight).Color = RGB(200, 200, 200)
+        wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row2, 1)).Borders(xlEdgeRight).Weight = xlThin
+
+        wsTimeline.Range(wsTimeline.Cells(row1, 2), wsTimeline.Cells(row2, 2)).Borders(xlEdgeRight).LineStyle = xlContinuous
+        wsTimeline.Range(wsTimeline.Cells(row1, 2), wsTimeline.Cells(row2, 2)).Borders(xlEdgeRight).Color = RGB(200, 200, 200)
+        wsTimeline.Range(wsTimeline.Cells(row1, 2), wsTimeline.Cells(row2, 2)).Borders(xlEdgeRight).Weight = xlThin
+
+        ' Project color indicator bar on left edge (spans both rows)
         Dim colorBar As Shape
         On Error Resume Next
         Set colorBar = wsTimeline.Shapes.AddShape(msoShapeRectangle, _
-            wsTimeline.Cells(row, 1).Left, _
-            wsTimeline.Cells(row, 1).Top, _
+            wsTimeline.Cells(row1, 1).Left, _
+            wsTimeline.Cells(row1, 1).Top, _
             4, _
-            TASK_ROW_HEIGHT)
+            TASK_ROW_HEIGHT + COMMENT_ROW_HEIGHT)
         If Not colorBar Is Nothing Then
             colorBar.Fill.ForeColor.RGB = GetProjectColor(project)
             colorBar.Line.Visible = msoFalse
@@ -408,7 +425,7 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
         On Error GoTo 0
 
         ' Set bar position (needed for both scheduled and unscheduled)
-        barTop = wsTimeline.Cells(row, 1).Top + BAR_TOP_MARGIN
+        barTop = wsTimeline.Cells(row1, 1).Top + BAR_TOP_MARGIN
 
         ' Check for unscheduled tasks (both dates empty)
         If (IsEmpty(taskStart) Or Not IsDate(taskStart)) And (IsEmpty(taskEnd) Or Not IsDate(taskEnd)) Then
@@ -574,7 +591,7 @@ Private Sub AddMonthDividers(ws As Worksheet, startDate As Date, totalWeeks As I
 
     prevMonth = ""
     lineTop = ws.Cells(HEADER_ROWS + 1, 1).Top
-    lineHeight = taskCount * TASK_ROW_HEIGHT
+    lineHeight = taskCount * (TASK_ROW_HEIGHT + COMMENT_ROW_HEIGHT)
 
     For i = 0 To totalWeeks - 1
         weekStart = DateAdd("d", i * 7, startDate)
@@ -613,7 +630,7 @@ Private Sub AddTodayMarker(ws As Worksheet, startDate As Date, totalWeeks As Int
 
         markerLeft = baseLeft + (todayWeek * colWidth)
         markerTop = ws.Cells(HEADER_ROWS + 1, 1).Top
-        markerHeight = taskCount * TASK_ROW_HEIGHT
+        markerHeight = taskCount * (TASK_ROW_HEIGHT + COMMENT_ROW_HEIGHT)
 
         If markerHeight > 0 And markerLeft > 0 Then
             Set shp = ws.Shapes.AddShape(msoShapeRectangle, markerLeft, markerTop, 2, markerHeight)
@@ -640,7 +657,7 @@ Private Sub AddChartBorder(ws As Worksheet, taskCount As Long, totalWeeks As Int
     Dim lastRow As Integer, lastCol As Integer
     Dim chartRange As Range
 
-    lastRow = HEADER_ROWS + taskCount
+    lastRow = HEADER_ROWS + (taskCount * 2)
     lastCol = LABEL_COLS + totalWeeks
 
     ' Empty border row/column
