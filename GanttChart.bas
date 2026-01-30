@@ -10,7 +10,7 @@ Option Explicit
 Private Const DATA_SHEET_NAME As String = "Project Data"
 Private Const TIMELINE_SHEET_NAME As String = "Timeline View"
 Private Const HEADER_ROWS As Integer = 3
-Private Const LABEL_COLS As Integer = 3
+Private Const LABEL_COLS As Integer = 4
 Private Const WEEK_COL_WIDTH As Double = 11
 Private Const TASK_ROW_HEIGHT As Double = 36
 Private Const BAR_HEIGHT As Double = 22
@@ -84,7 +84,7 @@ Public Sub GenerateTimeline()
     AddChartBorder wsTimeline, lastRow - 1, totalWeeks
 
     ' Freeze panes
-    wsTimeline.Range("D4").Select
+    wsTimeline.Range("E4").Select
     ActiveWindow.FreezePanes = True
 
     MsgBox "Timeline Generated!" & vbCrLf & vbCrLf & _
@@ -140,7 +140,8 @@ Private Sub SetupTimelineLayout(ws As Worksheet, totalWeeks As Integer)
     ' Column widths
     ws.Columns(1).ColumnWidth = 14  ' Project
     ws.Columns(2).ColumnWidth = 34  ' Task Name
-    ws.Columns(3).ColumnWidth = 26  ' Owner
+    ws.Columns(3).ColumnWidth = 8   ' %
+    ws.Columns(4).ColumnWidth = 26  ' Owner
 
     For i = 1 To totalWeeks
         ws.Columns(LABEL_COLS + i).ColumnWidth = WEEK_COL_WIDTH
@@ -174,14 +175,17 @@ Private Sub BuildHeaders(ws As Worksheet, startDate As Date, endDate As Date, to
     ws.Cells(1, LABEL_COLS + 1).HorizontalAlignment = xlCenter
     ws.Cells(1, LABEL_COLS + 1).VerticalAlignment = xlCenter
 
-    ' Column headers - merged rows 2-3 for labels
+    ' Column headers - merged rows 2-3 for labels (lighter gray)
+    Dim headerColor As Long
+    headerColor = RGB(96, 96, 96)
+
     ws.Range("A2:A3").Merge
     ws.Cells(2, 1).Value = "Project"
     ws.Cells(2, 1).Font.Size = 12
     ws.Cells(2, 1).Font.Bold = True
     ws.Cells(2, 1).HorizontalAlignment = xlCenter
     ws.Cells(2, 1).VerticalAlignment = xlCenter
-    ws.Cells(2, 1).Interior.Color = RGB(68, 68, 68)
+    ws.Cells(2, 1).Interior.Color = headerColor
     ws.Cells(2, 1).Font.Color = RGB(255, 255, 255)
 
     ws.Range("B2:B3").Merge
@@ -190,18 +194,27 @@ Private Sub BuildHeaders(ws As Worksheet, startDate As Date, endDate As Date, to
     ws.Cells(2, 2).Font.Bold = True
     ws.Cells(2, 2).HorizontalAlignment = xlCenter
     ws.Cells(2, 2).VerticalAlignment = xlCenter
-    ws.Cells(2, 2).Interior.Color = RGB(68, 68, 68)
+    ws.Cells(2, 2).Interior.Color = headerColor
     ws.Cells(2, 2).Font.Color = RGB(255, 255, 255)
 
     ws.Range("C2:C3").Merge
-    ws.Cells(2, 3).Value = "Owner"
+    ws.Cells(2, 3).Value = "%"
     ws.Cells(2, 3).Font.Size = 12
     ws.Cells(2, 3).Font.Bold = True
     ws.Cells(2, 3).HorizontalAlignment = xlCenter
     ws.Cells(2, 3).VerticalAlignment = xlCenter
-    ws.Cells(2, 3).WrapText = True
-    ws.Cells(2, 3).Interior.Color = RGB(68, 68, 68)
+    ws.Cells(2, 3).Interior.Color = headerColor
     ws.Cells(2, 3).Font.Color = RGB(255, 255, 255)
+
+    ws.Range("D2:D3").Merge
+    ws.Cells(2, 4).Value = "Owner"
+    ws.Cells(2, 4).Font.Size = 12
+    ws.Cells(2, 4).Font.Bold = True
+    ws.Cells(2, 4).HorizontalAlignment = xlCenter
+    ws.Cells(2, 4).VerticalAlignment = xlCenter
+    ws.Cells(2, 4).WrapText = True
+    ws.Cells(2, 4).Interior.Color = headerColor
+    ws.Cells(2, 4).Font.Color = RGB(255, 255, 255)
 
     ' Week headers
     prevMonth = ""
@@ -259,16 +272,20 @@ Private Sub BuildHeaders(ws As Worksheet, startDate As Date, endDate As Date, to
 
     ' Clean borders for label columns
     ws.Range("A2:A3").Borders.LineStyle = xlContinuous
-    ws.Range("A2:A3").Borders.Color = RGB(68, 68, 68)
+    ws.Range("A2:A3").Borders.Color = headerColor
     ws.Range("A2:A3").Borders.Weight = xlThin
 
     ws.Range("B2:B3").Borders.LineStyle = xlContinuous
-    ws.Range("B2:B3").Borders.Color = RGB(68, 68, 68)
+    ws.Range("B2:B3").Borders.Color = headerColor
     ws.Range("B2:B3").Borders.Weight = xlThin
 
     ws.Range("C2:C3").Borders.LineStyle = xlContinuous
-    ws.Range("C2:C3").Borders.Color = RGB(68, 68, 68)
+    ws.Range("C2:C3").Borders.Color = headerColor
     ws.Range("C2:C3").Borders.Weight = xlThin
+
+    ws.Range("D2:D3").Borders.LineStyle = xlContinuous
+    ws.Range("D2:D3").Borders.Color = headerColor
+    ws.Range("D2:D3").Borders.Weight = xlThin
 End Sub
 
 '===============================================================================
@@ -284,7 +301,7 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
     Dim startWeek As Double, endWeek As Double
     Dim clippedStart As Double, clippedEnd As Double
     Dim barLeft As Double, barWidth As Double, barTop As Double
-    Dim shp As Shape, progressShp As Shape, slipShp As Shape, termShp As Shape
+    Dim shp As Shape, progressShp As Shape, termShp As Shape
     Dim colWidth As Double, baseLeft As Double
     Dim origEndWeek As Double, mainBarWidth As Double
     Dim slipLeft As Double, slipWidth As Double, progressWidth As Double
@@ -320,11 +337,20 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
         wsTimeline.Cells(row, 2).Font.Size = 12
         wsTimeline.Cells(row, 2).VerticalAlignment = xlCenter
 
-        wsTimeline.Cells(row, 3).Value = owner
-        wsTimeline.Cells(row, 3).Font.Color = RGB(102, 102, 102)
+        ' Percentage column
+        If percentComplete > 0 Then
+            wsTimeline.Cells(row, 3).Value = CInt(percentComplete) & "%"
+        End If
         wsTimeline.Cells(row, 3).Font.Size = 12
-        wsTimeline.Cells(row, 3).WrapText = True
+        wsTimeline.Cells(row, 3).Font.Bold = True
+        wsTimeline.Cells(row, 3).HorizontalAlignment = xlCenter
         wsTimeline.Cells(row, 3).VerticalAlignment = xlCenter
+
+        wsTimeline.Cells(row, 4).Value = owner
+        wsTimeline.Cells(row, 4).Font.Color = RGB(102, 102, 102)
+        wsTimeline.Cells(row, 4).Font.Size = 12
+        wsTimeline.Cells(row, 4).WrapText = True
+        wsTimeline.Cells(row, 4).VerticalAlignment = xlCenter
 
         ' Alternate row colors
         If (i Mod 2) = 0 Then
@@ -349,6 +375,10 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
         wsTimeline.Cells(row, 3).Borders(xlEdgeRight).LineStyle = xlContinuous
         wsTimeline.Cells(row, 3).Borders(xlEdgeRight).Color = RGB(200, 200, 200)
         wsTimeline.Cells(row, 3).Borders(xlEdgeRight).Weight = xlThin
+
+        wsTimeline.Cells(row, 4).Borders(xlEdgeRight).LineStyle = xlContinuous
+        wsTimeline.Cells(row, 4).Borders(xlEdgeRight).Color = RGB(200, 200, 200)
+        wsTimeline.Cells(row, 4).Borders(xlEdgeRight).Weight = xlThin
 
         ' Project color indicator bar on left edge
         Dim colorBar As Shape
@@ -414,7 +444,7 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
         shp.Line.ForeColor.RGB = DarkenColor(barColor, 0.2)
         shp.Line.Weight = 1
 
-        ' Progress indicator (darker portion) - add text to THIS shape so it's in front
+        ' Progress indicator (darker portion)
         If percentComplete > 0 And percentComplete <= 100 Then
             progressWidth = mainBarWidth * (percentComplete / 100)
             If progressWidth >= 5 Then
@@ -423,18 +453,6 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
                 If Err.Number = 0 And Not progressShp Is Nothing Then
                     progressShp.Fill.ForeColor.RGB = DarkenColor(barColor, 0.15)
                     progressShp.Line.Visible = msoFalse
-
-                    ' Percentage text on progress shape (in front) - 14pt
-                    If mainBarWidth > 40 Then
-                        progressShp.TextFrame2.TextRange.Text = CInt(percentComplete) & "%"
-                        progressShp.TextFrame2.TextRange.Font.Size = 14
-                        progressShp.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
-                        progressShp.TextFrame2.TextRange.Font.Bold = msoTrue
-                        progressShp.TextFrame2.TextRange.ParagraphFormat.Alignment = msoAlignCenter
-                        progressShp.TextFrame2.VerticalAnchor = msoAnchorMiddle
-                        progressShp.TextFrame2.MarginLeft = 0
-                        progressShp.TextFrame2.MarginRight = 0
-                    End If
                 End If
                 Err.Clear
                 On Error GoTo 0
@@ -450,13 +468,13 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
                 On Error Resume Next
                 ' Dashed horizontal line (centered vertically in bar area)
                 Dim lineTop As Double
-                lineTop = barTop + (BAR_HEIGHT / 2) - 1
-                Set slipShp = wsTimeline.Shapes.AddShape(msoShapeRectangle, slipLeft, lineTop, slipWidth, 2)
-                If Err.Number = 0 And Not slipShp Is Nothing Then
-                    slipShp.Fill.Visible = msoFalse
-                    slipShp.Line.ForeColor.RGB = barColor
-                    slipShp.Line.Weight = 2
-                    slipShp.Line.DashStyle = msoLineDash
+                Dim slipLine As Shape
+                lineTop = barTop + (BAR_HEIGHT / 2)
+                Set slipLine = wsTimeline.Shapes.AddLine(slipLeft, lineTop, slipLeft + slipWidth, lineTop)
+                If Err.Number = 0 And Not slipLine Is Nothing Then
+                    slipLine.Line.ForeColor.RGB = barColor
+                    slipLine.Line.Weight = 2
+                    slipLine.Line.DashStyle = msoLineDash
                 End If
 
                 ' Termination marker (vertical bar at the end)
