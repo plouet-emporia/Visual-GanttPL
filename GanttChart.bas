@@ -138,10 +138,10 @@ Private Sub SetupTimelineLayout(ws As Worksheet, totalWeeks As Integer)
     ws.Cells.Interior.Color = RGB(255, 255, 255)
 
     ' Column widths
-    ws.Columns(1).ColumnWidth = 14  ' Project
-    ws.Columns(2).ColumnWidth = 34  ' Task Name
-    ws.Columns(3).ColumnWidth = 8   ' %
-    ws.Columns(4).ColumnWidth = 26  ' Owner
+    ws.Columns(1).ColumnWidth = 15  ' Project
+    ws.Columns(2).ColumnWidth = 25  ' Task Name
+    ws.Columns(3).ColumnWidth = 6   ' %
+    ws.Columns(4).ColumnWidth = 15  ' Owner
 
     For i = 1 To totalWeeks
         ws.Columns(LABEL_COLS + i).ColumnWidth = WEEK_COL_WIDTH
@@ -185,6 +185,7 @@ Private Sub BuildHeaders(ws As Worksheet, startDate As Date, endDate As Date, to
     ws.Cells(2, 1).Font.Bold = True
     ws.Cells(2, 1).HorizontalAlignment = xlCenter
     ws.Cells(2, 1).VerticalAlignment = xlCenter
+    ws.Cells(2, 1).WrapText = True
     ws.Cells(2, 1).Interior.Color = headerColor
     ws.Cells(2, 1).Font.Color = RGB(255, 255, 255)
 
@@ -194,6 +195,7 @@ Private Sub BuildHeaders(ws As Worksheet, startDate As Date, endDate As Date, to
     ws.Cells(2, 2).Font.Bold = True
     ws.Cells(2, 2).HorizontalAlignment = xlCenter
     ws.Cells(2, 2).VerticalAlignment = xlCenter
+    ws.Cells(2, 2).WrapText = True
     ws.Cells(2, 2).Interior.Color = headerColor
     ws.Cells(2, 2).Font.Color = RGB(255, 255, 255)
 
@@ -331,11 +333,13 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
         wsTimeline.Cells(row, 1).Value = project
         wsTimeline.Cells(row, 1).Font.Size = 12
         wsTimeline.Cells(row, 1).VerticalAlignment = xlCenter
+        wsTimeline.Cells(row, 1).WrapText = True
 
         wsTimeline.Cells(row, 2).Value = taskName
         wsTimeline.Cells(row, 2).Font.Bold = True
         wsTimeline.Cells(row, 2).Font.Size = 12
         wsTimeline.Cells(row, 2).VerticalAlignment = xlCenter
+        wsTimeline.Cells(row, 2).WrapText = True
 
         ' Percentage column
         If percentComplete > 0 Then
