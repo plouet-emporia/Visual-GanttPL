@@ -17,14 +17,14 @@ Private Const BAR_HEIGHT As Double = 22
 Private Const BAR_TOP_MARGIN As Double = 7
 
 ' Column indices in Project Data (1-based)
-' After removing Duration(E), Project(N), Slip(Q)
+' A=TaskID/Project, B=TaskName, C=Start, D=End, E=Owner, F=%, ..., L=OrigStart, M=OrigEnd
 Private Const COL_PROJECT As Integer = 1      ' A - Task ID is the Project
 Private Const COL_TASK_NAME As Integer = 2    ' B - Task Name
 Private Const COL_START_DATE As Integer = 3   ' C - Start Date
 Private Const COL_END_DATE As Integer = 4     ' D - End Date
-Private Const COL_OWNER As Integer = 5        ' E - Owner (was F)
-Private Const COL_PERCENT As Integer = 6      ' F - % Complete (was G)
-Private Const COL_ORIG_END As Integer = 14    ' N - Original End (was P)
+Private Const COL_OWNER As Integer = 5        ' E - Owner
+Private Const COL_PERCENT As Integer = 6      ' F - % Complete
+Private Const COL_ORIG_END As Integer = 13    ' M - Original End
 
 ' Colors for alternating rows
 Private Const ROW_COLOR_1 As Long = 16777215  ' White
