@@ -407,6 +407,37 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
         End If
         On Error GoTo 0
 
+        ' Set bar position (needed for both scheduled and unscheduled)
+        barTop = wsTimeline.Cells(row, 1).Top + BAR_TOP_MARGIN
+
+        ' Check for unscheduled tasks (both dates empty)
+        If (IsEmpty(taskStart) Or Not IsDate(taskStart)) And (IsEmpty(taskEnd) Or Not IsDate(taskEnd)) Then
+            ' Draw crosshatched "unscheduled" bar from today to end of timeline
+            Dim todayWeek As Double
+            Dim unschedLeft As Double, unschedWidth As Double
+            Dim unschedShp As Shape
+
+            todayWeek = (Date - startDate) / 7
+            If todayWeek < 0 Then todayWeek = 0
+            If todayWeek < totalWeeks Then
+                unschedLeft = baseLeft + (todayWeek * colWidth)
+                unschedWidth = (totalWeeks - todayWeek) * colWidth
+
+                On Error Resume Next
+                Set unschedShp = wsTimeline.Shapes.AddShape(msoShapeRoundedRectangle, unschedLeft, barTop, unschedWidth, BAR_HEIGHT)
+                If Err.Number = 0 And Not unschedShp Is Nothing Then
+                    unschedShp.Fill.Patterned msoPatternDiagonalCross
+                    unschedShp.Fill.ForeColor.RGB = RGB(180, 180, 180)
+                    unschedShp.Fill.BackColor.RGB = RGB(240, 240, 240)
+                    unschedShp.Line.ForeColor.RGB = RGB(150, 150, 150)
+                    unschedShp.Line.Weight = 1
+                End If
+                Err.Clear
+                On Error GoTo 0
+            End If
+            GoTo NextTask
+        End If
+
         If IsEmpty(taskStart) Or IsEmpty(taskEnd) Then GoTo NextTask
         If Not IsDate(taskStart) Or Not IsDate(taskEnd) Then GoTo NextTask
 
@@ -433,7 +464,6 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
         End If
 
         barLeft = baseLeft + (clippedStart * colWidth)
-        barTop = wsTimeline.Cells(row, 1).Top + BAR_TOP_MARGIN
         barColor = GetProjectColor(project)
 
         ' Main bar width (excluding slip)
