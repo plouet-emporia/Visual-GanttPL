@@ -345,15 +345,8 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
         percentComplete = Val(wsData.Cells(i, COL_PERCENT).Value)
         On Error GoTo 0
 
-        ' Determine row color (alternating)
-        If (i Mod 2) = 0 Then
-            rowColor = ROW_COLOR_2
-        Else
-            rowColor = ROW_COLOR_1
-        End If
-
-        ' Apply alternating colors to row1 only, row2 (comments) always white
-        wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row1, LABEL_COLS + totalWeeks)).Interior.Color = rowColor
+        ' Data row (row1) always light gray, comments row (row2) always white
+        wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row1, LABEL_COLS + totalWeeks)).Interior.Color = ROW_COLOR_2
         wsTimeline.Range(wsTimeline.Cells(row2, 1), wsTimeline.Cells(row2, LABEL_COLS + totalWeeks)).Interior.Color = RGB(255, 255, 255)
 
         ' Row 1: Project, Task, %, Owner
