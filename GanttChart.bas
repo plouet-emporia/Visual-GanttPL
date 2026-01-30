@@ -79,6 +79,7 @@ Public Sub GenerateTimeline()
     End If
 
     barsCreated = BuildTaskBars(wsData, wsTimeline, startDate, endDate, totalWeeks, lastRow)
+    AddMonthDividers wsTimeline, startDate, totalWeeks, lastRow - 1
     AddTodayMarker wsTimeline, startDate, totalWeeks, lastRow - 1
     AddChartBorder wsTimeline, lastRow - 1, totalWeeks
 
@@ -159,34 +160,48 @@ Private Sub BuildHeaders(ws As Worksheet, startDate As Date, endDate As Date, to
     Dim currentMonth As String
     Dim monthStartCol As Integer
     Dim prevMonth As String
+    Dim monthBoundaries() As Integer
+    Dim boundaryCount As Integer
 
-    ' Title - merged across first two columns
-    ws.Range("A1:B1").Merge
-    ws.Range("A1").Value = "Project Timeline"
-    ws.Range("A1").Font.Size = 18
-    ws.Range("A1").Font.Bold = True
-    ws.Range("A1").VerticalAlignment = xlCenter
+    ReDim monthBoundaries(0 To totalWeeks)
+    boundaryCount = 0
 
-    ' Date range
-    ws.Cells(1, 3).Value = Format(startDate, "mmmm d, yyyy") & " - " & Format(endDate, "mmmm d, yyyy")
-    ws.Cells(1, 3).Font.Color = RGB(102, 102, 102)
-    ws.Cells(1, 3).Font.Size = 11
+    ' Title - merged above timeline columns only (starting at column D)
+    ws.Range(ws.Cells(1, LABEL_COLS + 1), ws.Cells(1, LABEL_COLS + totalWeeks)).Merge
+    ws.Cells(1, LABEL_COLS + 1).Value = "Project Timeline: " & Format(startDate, "mmmm d, yyyy") & " - " & Format(endDate, "mmmm d, yyyy")
+    ws.Cells(1, LABEL_COLS + 1).Font.Size = 14
+    ws.Cells(1, LABEL_COLS + 1).Font.Bold = True
+    ws.Cells(1, LABEL_COLS + 1).HorizontalAlignment = xlCenter
+    ws.Cells(1, LABEL_COLS + 1).VerticalAlignment = xlCenter
 
-    ' Column headers - 12pt font
+    ' Column headers - merged rows 2-3 for labels
+    ws.Range("A2:A3").Merge
     ws.Cells(2, 1).Value = "Project"
     ws.Cells(2, 1).Font.Size = 12
     ws.Cells(2, 1).Font.Bold = True
+    ws.Cells(2, 1).HorizontalAlignment = xlCenter
+    ws.Cells(2, 1).VerticalAlignment = xlCenter
+    ws.Cells(2, 1).Interior.Color = RGB(68, 68, 68)
+    ws.Cells(2, 1).Font.Color = RGB(255, 255, 255)
 
+    ws.Range("B2:B3").Merge
     ws.Cells(2, 2).Value = "Task"
     ws.Cells(2, 2).Font.Size = 12
     ws.Cells(2, 2).Font.Bold = True
+    ws.Cells(2, 2).HorizontalAlignment = xlCenter
+    ws.Cells(2, 2).VerticalAlignment = xlCenter
+    ws.Cells(2, 2).Interior.Color = RGB(68, 68, 68)
+    ws.Cells(2, 2).Font.Color = RGB(255, 255, 255)
 
+    ws.Range("C2:C3").Merge
     ws.Cells(2, 3).Value = "Owner"
     ws.Cells(2, 3).Font.Size = 12
     ws.Cells(2, 3).Font.Bold = True
+    ws.Cells(2, 3).HorizontalAlignment = xlCenter
+    ws.Cells(2, 3).VerticalAlignment = xlCenter
     ws.Cells(2, 3).WrapText = True
-
-    ws.Range("A2:C3").Interior.Color = RGB(248, 249, 250)
+    ws.Cells(2, 3).Interior.Color = RGB(68, 68, 68)
+    ws.Cells(2, 3).Font.Color = RGB(255, 255, 255)
 
     ' Week headers
     prevMonth = ""
@@ -200,14 +215,20 @@ Private Sub BuildHeaders(ws As Worksheet, startDate As Date, endDate As Date, to
 
         currentMonth = Format(weekStart, "mmmm, yyyy")
 
-        ' DD/MM of Friday
-        ws.Cells(3, LABEL_COLS + 1 + i).Value = Format(fridayDate, "dd/mm")
+        ' DD/MM of Friday - consistent format
+        ws.Cells(3, LABEL_COLS + 1 + i).Value = Format(fridayDate, "d-mmm")
         ws.Cells(3, LABEL_COLS + 1 + i).HorizontalAlignment = xlCenter
         ws.Cells(3, LABEL_COLS + 1 + i).Font.Size = 9
         ws.Cells(3, LABEL_COLS + 1 + i).Interior.Color = RGB(232, 240, 254)
 
         ' Month tracking
         If currentMonth <> prevMonth Then
+            ' Record month boundary for vertical lines
+            If prevMonth <> "" Then
+                monthBoundaries(boundaryCount) = LABEL_COLS + 1 + i
+                boundaryCount = boundaryCount + 1
+            End If
+
             If prevMonth <> "" And LABEL_COLS + i > monthStartCol Then
                 ws.Range(ws.Cells(2, monthStartCol), ws.Cells(2, LABEL_COLS + i)).Merge
                 ws.Cells(2, monthStartCol).Value = prevMonth
@@ -215,7 +236,7 @@ Private Sub BuildHeaders(ws As Worksheet, startDate As Date, endDate As Date, to
                 ws.Cells(2, monthStartCol).Interior.Color = RGB(66, 133, 244)
                 ws.Cells(2, monthStartCol).Font.Color = RGB(255, 255, 255)
                 ws.Cells(2, monthStartCol).Font.Bold = True
-                ws.Cells(2, monthStartCol).Font.Size = 11
+                ws.Cells(2, monthStartCol).Font.Size = 16
             End If
             monthStartCol = LABEL_COLS + 1 + i
             prevMonth = currentMonth
@@ -231,12 +252,23 @@ Private Sub BuildHeaders(ws As Worksheet, startDate As Date, endDate As Date, to
     ws.Cells(2, monthStartCol).Interior.Color = RGB(66, 133, 244)
     ws.Cells(2, monthStartCol).Font.Color = RGB(255, 255, 255)
     ws.Cells(2, monthStartCol).Font.Bold = True
-    ws.Cells(2, monthStartCol).Font.Size = 11
+    ws.Cells(2, monthStartCol).Font.Size = 16
 
-    ' Header borders
-    ws.Range(ws.Cells(2, 1), ws.Cells(3, LABEL_COLS + totalWeeks)).Borders.LineStyle = xlContinuous
-    ws.Range(ws.Cells(2, 1), ws.Cells(3, LABEL_COLS + totalWeeks)).Borders.Color = RGB(200, 200, 200)
-    ws.Range(ws.Cells(2, 1), ws.Cells(3, LABEL_COLS + totalWeeks)).Borders.Weight = xlThin
+    ' Store month boundaries for later use
+    ReDim Preserve monthBoundaries(0 To boundaryCount)
+
+    ' Clean borders for label columns
+    ws.Range("A2:A3").Borders.LineStyle = xlContinuous
+    ws.Range("A2:A3").Borders.Color = RGB(68, 68, 68)
+    ws.Range("A2:A3").Borders.Weight = xlThin
+
+    ws.Range("B2:B3").Borders.LineStyle = xlContinuous
+    ws.Range("B2:B3").Borders.Color = RGB(68, 68, 68)
+    ws.Range("B2:B3").Borders.Weight = xlThin
+
+    ws.Range("C2:C3").Borders.LineStyle = xlContinuous
+    ws.Range("C2:C3").Borders.Color = RGB(68, 68, 68)
+    ws.Range("C2:C3").Borders.Weight = xlThin
 End Sub
 
 '===============================================================================
@@ -301,9 +333,36 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
             wsTimeline.Range(wsTimeline.Cells(row, 1), wsTimeline.Cells(row, LABEL_COLS + totalWeeks)).Interior.Color = ROW_COLOR_1
         End If
 
-        ' Row border
+        ' Row bottom border
         wsTimeline.Range(wsTimeline.Cells(row, 1), wsTimeline.Cells(row, LABEL_COLS + totalWeeks)).Borders(xlEdgeBottom).LineStyle = xlContinuous
         wsTimeline.Range(wsTimeline.Cells(row, 1), wsTimeline.Cells(row, LABEL_COLS + totalWeeks)).Borders(xlEdgeBottom).Color = RGB(230, 230, 230)
+
+        ' Clean column borders for project info columns
+        wsTimeline.Cells(row, 1).Borders(xlEdgeRight).LineStyle = xlContinuous
+        wsTimeline.Cells(row, 1).Borders(xlEdgeRight).Color = RGB(200, 200, 200)
+        wsTimeline.Cells(row, 1).Borders(xlEdgeRight).Weight = xlThin
+
+        wsTimeline.Cells(row, 2).Borders(xlEdgeRight).LineStyle = xlContinuous
+        wsTimeline.Cells(row, 2).Borders(xlEdgeRight).Color = RGB(200, 200, 200)
+        wsTimeline.Cells(row, 2).Borders(xlEdgeRight).Weight = xlThin
+
+        wsTimeline.Cells(row, 3).Borders(xlEdgeRight).LineStyle = xlContinuous
+        wsTimeline.Cells(row, 3).Borders(xlEdgeRight).Color = RGB(200, 200, 200)
+        wsTimeline.Cells(row, 3).Borders(xlEdgeRight).Weight = xlThin
+
+        ' Project color indicator bar on left edge
+        Dim colorBar As Shape
+        On Error Resume Next
+        Set colorBar = wsTimeline.Shapes.AddShape(msoShapeRectangle, _
+            wsTimeline.Cells(row, 1).Left, _
+            wsTimeline.Cells(row, 1).Top, _
+            4, _
+            TASK_ROW_HEIGHT)
+        If Not colorBar Is Nothing Then
+            colorBar.Fill.ForeColor.RGB = GetProjectColor(project)
+            colorBar.Line.Visible = msoFalse
+        End If
+        On Error GoTo 0
 
         If IsEmpty(taskStart) Or IsEmpty(taskEnd) Then GoTo NextTask
         If Not IsDate(taskStart) Or Not IsDate(taskEnd) Then GoTo NextTask
@@ -355,7 +414,7 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
         shp.Line.ForeColor.RGB = DarkenColor(barColor, 0.2)
         shp.Line.Weight = 1
 
-        ' Progress indicator (darker portion)
+        ' Progress indicator (darker portion) - add text to THIS shape so it's in front
         If percentComplete > 0 And percentComplete <= 100 Then
             progressWidth = mainBarWidth * (percentComplete / 100)
             If progressWidth >= 5 Then
@@ -364,44 +423,47 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
                 If Err.Number = 0 And Not progressShp Is Nothing Then
                     progressShp.Fill.ForeColor.RGB = DarkenColor(barColor, 0.15)
                     progressShp.Line.Visible = msoFalse
+
+                    ' Percentage text on progress shape (in front) - 14pt
+                    If mainBarWidth > 40 Then
+                        progressShp.TextFrame2.TextRange.Text = CInt(percentComplete) & "%"
+                        progressShp.TextFrame2.TextRange.Font.Size = 14
+                        progressShp.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
+                        progressShp.TextFrame2.TextRange.Font.Bold = msoTrue
+                        progressShp.TextFrame2.TextRange.ParagraphFormat.Alignment = msoAlignCenter
+                        progressShp.TextFrame2.VerticalAnchor = msoAnchorMiddle
+                        progressShp.TextFrame2.MarginLeft = 0
+                        progressShp.TextFrame2.MarginRight = 0
+                    End If
                 End If
                 Err.Clear
                 On Error GoTo 0
-
-                ' Percentage text - 14pt
-                If mainBarWidth > 40 Then
-                    On Error Resume Next
-                    shp.TextFrame2.TextRange.Text = CInt(percentComplete) & "%"
-                    shp.TextFrame2.TextRange.Font.Size = 14
-                    shp.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
-                    shp.TextFrame2.TextRange.Font.Bold = msoTrue
-                    shp.TextFrame2.TextRange.ParagraphFormat.Alignment = msoAlignCenter
-                    shp.TextFrame2.VerticalAnchor = msoAnchorMiddle
-                    On Error GoTo 0
-                End If
             End If
         End If
 
-        ' Slip indicator (dashed + termination)
+        ' Slip indicator - dashed horizontal line with termination marker
         If hasSlip And clippedEnd > origEndWeek Then
             slipLeft = baseLeft + (origEndWeek * colWidth)
             slipWidth = (clippedEnd - origEndWeek) * colWidth
 
             If slipWidth > 3 Then
                 On Error Resume Next
-                Set slipShp = wsTimeline.Shapes.AddShape(msoShapeRoundedRectangle, slipLeft, barTop, slipWidth, BAR_HEIGHT)
+                ' Dashed horizontal line (centered vertically in bar area)
+                Dim lineTop As Double
+                lineTop = barTop + (BAR_HEIGHT / 2) - 1
+                Set slipShp = wsTimeline.Shapes.AddShape(msoShapeRectangle, slipLeft, lineTop, slipWidth, 2)
                 If Err.Number = 0 And Not slipShp Is Nothing Then
-                    slipShp.Fill.ForeColor.RGB = LightenColor(barColor, 0.6)
+                    slipShp.Fill.Visible = msoFalse
                     slipShp.Line.ForeColor.RGB = barColor
                     slipShp.Line.Weight = 2
                     slipShp.Line.DashStyle = msoLineDash
+                End If
 
-                    ' Termination bar
-                    Set termShp = wsTimeline.Shapes.AddShape(msoShapeRectangle, slipLeft + slipWidth - 3, barTop, 3, BAR_HEIGHT)
-                    If Not termShp Is Nothing Then
-                        termShp.Fill.ForeColor.RGB = barColor
-                        termShp.Line.Visible = msoFalse
-                    End If
+                ' Termination marker (vertical bar at the end)
+                Set termShp = wsTimeline.Shapes.AddShape(msoShapeRectangle, slipLeft + slipWidth - 2, barTop + 4, 3, BAR_HEIGHT - 8)
+                If Err.Number = 0 And Not termShp Is Nothing Then
+                    termShp.Fill.ForeColor.RGB = barColor
+                    termShp.Line.Visible = msoFalse
                 End If
                 Err.Clear
                 On Error GoTo 0
@@ -415,6 +477,42 @@ NextTask:
 
     BuildTaskBars = barsCreated
 End Function
+
+'===============================================================================
+Private Sub AddMonthDividers(ws As Worksheet, startDate As Date, totalWeeks As Integer, taskCount As Long)
+    Dim i As Integer
+    Dim weekStart As Date
+    Dim currentMonth As String
+    Dim prevMonth As String
+    Dim colLeft As Double
+    Dim lineTop As Double
+    Dim lineHeight As Double
+    Dim shp As Shape
+
+    On Error Resume Next
+
+    prevMonth = ""
+    lineTop = ws.Cells(HEADER_ROWS + 1, 1).Top
+    lineHeight = taskCount * TASK_ROW_HEIGHT
+
+    For i = 0 To totalWeeks - 1
+        weekStart = DateAdd("d", i * 7, startDate)
+        currentMonth = Format(weekStart, "mmmm yyyy")
+
+        If currentMonth <> prevMonth And prevMonth <> "" Then
+            ' Draw vertical line at month boundary
+            colLeft = ws.Cells(HEADER_ROWS + 1, LABEL_COLS + 1 + i).Left
+            Set shp = ws.Shapes.AddShape(msoShapeRectangle, colLeft, lineTop, 1, lineHeight)
+            If Not shp Is Nothing Then
+                shp.Fill.ForeColor.RGB = RGB(66, 133, 244)
+                shp.Line.Visible = msoFalse
+            End If
+        End If
+        prevMonth = currentMonth
+    Next i
+
+    On Error GoTo 0
+End Sub
 
 '===============================================================================
 Private Sub AddTodayMarker(ws As Worksheet, startDate As Date, totalWeeks As Integer, taskCount As Long)
