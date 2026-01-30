@@ -342,6 +342,7 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
         wsTimeline.Cells(row, 2).WrapText = True
 
         ' Percentage column
+        wsTimeline.Cells(row, 3).NumberFormat = "@"  ' Text format
         If percentComplete > 0 Then
             wsTimeline.Cells(row, 3).Value = CInt(percentComplete) & "%"
         End If
@@ -351,7 +352,7 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
         wsTimeline.Cells(row, 3).VerticalAlignment = xlCenter
 
         wsTimeline.Cells(row, 4).Value = owner
-        wsTimeline.Cells(row, 4).Font.Color = RGB(102, 102, 102)
+        wsTimeline.Cells(row, 4).Font.Color = RGB(80, 80, 80)
         wsTimeline.Cells(row, 4).Font.Size = 12
         wsTimeline.Cells(row, 4).WrapText = True
         wsTimeline.Cells(row, 4).VerticalAlignment = xlCenter
