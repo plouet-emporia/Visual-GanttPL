@@ -431,14 +431,26 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
                     unschedShp.Fill.BackColor.RGB = RGB(240, 240, 240)
                     unschedShp.Line.ForeColor.RGB = RGB(150, 150, 150)
                     unschedShp.Line.Weight = 1
+                End If
 
-                    ' Add centered text
-                    unschedShp.TextFrame2.TextRange.Text = "Unscheduled"
-                    unschedShp.TextFrame2.TextRange.Font.Size = 10
-                    unschedShp.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(100, 100, 100)
-                    unschedShp.TextFrame2.TextRange.Font.Italic = msoTrue
-                    unschedShp.TextFrame2.TextRange.ParagraphFormat.Alignment = msoAlignCenter
-                    unschedShp.TextFrame2.VerticalAnchor = msoAnchorMiddle
+                ' Add label with white background in center
+                Dim labelShp As Shape
+                Dim labelWidth As Double, labelLeft As Double
+                labelWidth = 80
+                labelLeft = unschedLeft + (unschedWidth / 2) - (labelWidth / 2)
+                Set labelShp = wsTimeline.Shapes.AddShape(msoShapeRoundedRectangle, labelLeft, barTop + 2, labelWidth, BAR_HEIGHT - 4)
+                If Err.Number = 0 And Not labelShp Is Nothing Then
+                    labelShp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+                    labelShp.Line.ForeColor.RGB = RGB(180, 180, 180)
+                    labelShp.Line.Weight = 1
+                    labelShp.TextFrame2.TextRange.Text = "Unscheduled"
+                    labelShp.TextFrame2.TextRange.Font.Size = 9
+                    labelShp.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(120, 120, 120)
+                    labelShp.TextFrame2.TextRange.Font.Italic = msoTrue
+                    labelShp.TextFrame2.TextRange.ParagraphFormat.Alignment = msoAlignCenter
+                    labelShp.TextFrame2.VerticalAnchor = msoAnchorMiddle
+                    labelShp.TextFrame2.MarginLeft = 0
+                    labelShp.TextFrame2.MarginRight = 0
                 End If
                 Err.Clear
                 On Error GoTo 0
