@@ -380,12 +380,14 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
 
         ' Comments row (row2) - spans entire row, white background, dark readable text
         wsTimeline.Range(wsTimeline.Cells(row2, 1), wsTimeline.Cells(row2, LABEL_COLS + totalWeeks)).Merge
+        wsTimeline.Range(wsTimeline.Cells(row2, 1), wsTimeline.Cells(row2, LABEL_COLS + totalWeeks)).Borders(xlInsideVertical).LineStyle = xlNone
         wsTimeline.Cells(row2, 1).Value = comments
         wsTimeline.Cells(row2, 1).Font.Size = 11
         wsTimeline.Cells(row2, 1).Font.Italic = True
         wsTimeline.Cells(row2, 1).Font.Color = RGB(50, 50, 50)
         wsTimeline.Cells(row2, 1).VerticalAlignment = xlCenter
         wsTimeline.Cells(row2, 1).IndentLevel = 1
+        wsTimeline.Cells(row2, 1).Borders(xlEdgeRight).LineStyle = xlNone
 
         ' Row bottom border (on row2 - bottom of task block)
         wsTimeline.Range(wsTimeline.Cells(row2, 1), wsTimeline.Cells(row2, LABEL_COLS + totalWeeks)).Borders(xlEdgeBottom).LineStyle = xlContinuous
