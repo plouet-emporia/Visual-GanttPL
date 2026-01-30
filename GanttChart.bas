@@ -352,9 +352,9 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
             rowColor = ROW_COLOR_1
         End If
 
-        ' Apply alternating colors to both rows
+        ' Apply alternating colors to row1 only, row2 (comments) always white
         wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row1, LABEL_COLS + totalWeeks)).Interior.Color = rowColor
-        wsTimeline.Range(wsTimeline.Cells(row2, 1), wsTimeline.Cells(row2, LABEL_COLS + totalWeeks)).Interior.Color = rowColor
+        wsTimeline.Range(wsTimeline.Cells(row2, 1), wsTimeline.Cells(row2, LABEL_COLS + totalWeeks)).Interior.Color = RGB(255, 255, 255)
 
         ' Row 1: Project, Task, %, Owner
         wsTimeline.Cells(row1, 1).Value = project
@@ -390,12 +390,12 @@ Private Function BuildTaskBars(wsData As Worksheet, wsTimeline As Worksheet, _
         wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row1, LABEL_COLS + totalWeeks)).Borders(xlEdgeBottom).Color = RGB(220, 220, 220)
         wsTimeline.Range(wsTimeline.Cells(row1, 1), wsTimeline.Cells(row1, LABEL_COLS + totalWeeks)).Borders(xlEdgeBottom).Weight = xlHairline
 
-        ' Comments row (row2) - spans entire row
+        ' Comments row (row2) - spans entire row, white background, dark readable text
         wsTimeline.Range(wsTimeline.Cells(row2, 1), wsTimeline.Cells(row2, LABEL_COLS + totalWeeks)).Merge
         wsTimeline.Cells(row2, 1).Value = comments
-        wsTimeline.Cells(row2, 1).Font.Size = 10
+        wsTimeline.Cells(row2, 1).Font.Size = 11
         wsTimeline.Cells(row2, 1).Font.Italic = True
-        wsTimeline.Cells(row2, 1).Font.Color = RGB(100, 100, 100)
+        wsTimeline.Cells(row2, 1).Font.Color = RGB(50, 50, 50)
         wsTimeline.Cells(row2, 1).VerticalAlignment = xlCenter
         wsTimeline.Cells(row2, 1).IndentLevel = 1
 
