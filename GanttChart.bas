@@ -30,6 +30,11 @@ Private Const COL_ORIG_END As Integer = 16
 Private Const ROW_COLOR_1 As Long = 16777215  ' White
 Private Const ROW_COLOR_2 As Long = 15921906  ' Light gray #F2F2F2
 
+' Dynamic project color tracking
+Private projectColors As Collection
+Private colorIndex As Integer
+Private colorPalette(0 To 9) As Long
+
 '===============================================================================
 ' Main Entry Point
 '===============================================================================
@@ -46,6 +51,9 @@ Public Sub GenerateTimeline()
 
     Application.ScreenUpdating = False
     Application.Calculation = xlCalculationManual
+
+    ' Initialize dynamic color system
+    InitializeColors
 
     Set wsData = GetDataSheet()
     If wsData Is Nothing Then
@@ -616,20 +624,47 @@ Private Sub AddChartBorder(ws As Worksheet, taskCount As Long, totalWeeks As Int
 End Sub
 
 '===============================================================================
+Private Sub InitializeColors()
+    ' Reset project color tracking
+    Set projectColors = New Collection
+    colorIndex = 0
+
+    ' Define color palette (10 distinct colors)
+    colorPalette(0) = RGB(66, 133, 244)   ' Blue
+    colorPalette(1) = RGB(251, 188, 5)    ' Yellow/Gold
+    colorPalette(2) = RGB(234, 67, 53)    ' Red
+    colorPalette(3) = RGB(156, 39, 176)   ' Purple
+    colorPalette(4) = RGB(52, 168, 83)    ' Green
+    colorPalette(5) = RGB(255, 112, 67)   ' Orange
+    colorPalette(6) = RGB(0, 172, 193)    ' Cyan
+    colorPalette(7) = RGB(171, 71, 188)   ' Light Purple
+    colorPalette(8) = RGB(124, 179, 66)   ' Lime
+    colorPalette(9) = RGB(255, 167, 38)   ' Amber
+End Sub
+
+'===============================================================================
 Private Function GetProjectColor(project As String) As Long
     Dim p As String
-    p = LCase(Trim(project))
+    Dim existingColor As Variant
 
-    If InStr(p, "c1") > 0 Or InStr(p, "all products") > 0 Then
-        GetProjectColor = RGB(66, 133, 244)
-    ElseIf InStr(p, "v2g") > 0 Then
-        GetProjectColor = RGB(251, 188, 5)
-    ElseIf InStr(p, "vue") > 0 Then
-        GetProjectColor = RGB(234, 67, 53)
-    ElseIf InStr(p, "cm") > 0 Or InStr(p, "transfer") > 0 Then
-        GetProjectColor = RGB(156, 39, 176)
+    p = LCase(Trim(project))
+    If p = "" Then
+        GetProjectColor = RGB(74, 101, 114)  ' Default gray for empty
+        Exit Function
+    End If
+
+    ' Check if project already has a color assigned
+    On Error Resume Next
+    existingColor = projectColors(p)
+    On Error GoTo 0
+
+    If Not IsEmpty(existingColor) Then
+        GetProjectColor = existingColor
     Else
-        GetProjectColor = RGB(74, 101, 114)
+        ' Assign next color from palette
+        GetProjectColor = colorPalette(colorIndex Mod 10)
+        projectColors.Add GetProjectColor, p
+        colorIndex = colorIndex + 1
     End If
 End Function
 
